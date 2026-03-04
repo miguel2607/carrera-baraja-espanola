@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Play, RotateCcw, Info, Settings, User, Sword, Shield, Crown, Sparkles } from 'lucide-react';
 import { getGameState, startNewGame, stepGame } from './api';
-import type { GameState, Player, Card as CardData } from './api';
+import type { GameState, Card as CardData } from './api';
 import confetti from 'canvas-confetti';
 
 const SUIT_ICONS: Record<string, string> = {
