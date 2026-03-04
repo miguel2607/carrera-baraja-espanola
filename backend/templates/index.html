@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Carrera de Caballos — Baraja Española (Web)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --surface: #13131a;
+      --panel: #1a1a24;
+      --border: #2a2a3d;
+      --gold: #d4a843;
+      --gold-light: #f0c96a;
+      --emerald: #10b981;
+      --crimson: #e53e5a;
+      --sapphire: #4f8ef7;
+      --text: #f0ede8;
+      --text2: #9d9bb5;
+      --text3: #5a5875;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+      color: var(--text);
+    }
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      background: linear-gradient(90deg, #111827, #020617);
+      border-radius: 12px;
+      border: 1px solid rgba(212,168,67,0.35);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+    }
+    .title-block h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+    }
+    .title-block p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .controls button {
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      margin-left: 8px;
+      font-size: 13px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+    #new-game {
+      background: var(--gold);
+      color: #111827;
+    }
+    #new-game:hover { background: var(--gold-light); }
+    #step {
+      background: var(--emerald);
+      color: #020617;
+    }
+    #step:disabled {
+      background: #374151;
+      color: #9ca3af;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 18px;
+      align-items: flex-start;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    .board {
+      background: rgba(15,23,42,0.96);
+      border-radius: 14px;
+      border: 1px solid rgba(55,65,81,0.8);
+      padding: 16px 18px 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.65);
+    }
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .board-header h2 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+    }
+    .status {
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .checkpoints-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 4px 6px;
+      border-radius: 10px;
+      background: radial-gradient(circle at top, #020617, #020617 40%, #000 100%);
+      border: 1px solid rgba(55,65,81,0.8);
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .checkpoints-row::before {
+      content: "CHECKPOINTS";
+      position: absolute;
+      top: -10px;
+      left: 10px;
+      padding: 2px 8px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      background: #020617;
+      color: var(--text3);
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      text-transform: uppercase;
+    }
+    .cp-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 64px;
+    }
+    .cp-card {
+      width: 64px;
+      height: 100px;
+      border-radius: 9px;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      border: 1px solid rgba(148,163,184,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cp-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .cp-index {
+      font-size: 11px;
+      color: var(--gold);
+    }
+    .lanes {
+      margin-top: 6px;
+      padding: 8px 8px 6px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.9), rgba(15,23,42,0.4));
+      border: 1px solid rgba(55,65,81,0.8);
+    }
+    .lane-row {
+      display: grid;
+      grid-template-columns: 80px minmax(0, 1fr) 70px;
+      align-items: center;
+      padding: 6px 6px;
+      border-radius: 8px;
+    }
+    .lane-row:nth-child(odd) {
+      background: radial-gradient(circle at left, rgba(31,41,55,0.7), rgba(15,23,42,0.3));
+    }
+    .lane-label {
+      font-size: 13px;
+      color: var(--text2);
+    }
+    .lane-bar-wrap {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      overflow: hidden;
+      border: 1px solid rgba(55,65,81,0.9);
+    }
+    .lane-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(212,168,67,0.75), rgba(56,189,248,0.8));
+      width: 0%;
+      transition: width 220ms ease-out;
+    }
+    .lane-pos {
+      text-align: right;
+      font-size: 12px;
+      color: var(--text3);
+    }
+    .detail-panel {
+      background: rgba(15,23,42,0.96);
+      border-radius: 14px;
+      border: 1px solid rgba(55,65,81,0.9);
+      padding: 14px 16px 16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .section-title {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 4px;
+    }
+    .last-card-wrap {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .last-card-frame {
+      width: 110px;
+      height: 170px;
+      border-radius: 11px;
+      background: radial-gradient(circle at top, #111827, #020617);
+      border: 1px solid rgba(148,163,184,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .last-card-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .last-card-info {
+      font-size: 13px;
+      color: var(--text2);
+    }
+    .log {
+      white-space: pre-wrap;
+      font-size: 12px;
+      background: radial-gradient(circle at top, #020617, #020617 40%, #000 100%);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(55,65,81,0.9);
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .log-line { margin: 1px 0; }
+    .log-line.cp { color: var(--sapphire); }
+    .log-line.penalty { color: var(--crimson); }
+    .log-line.winner { color: var(--emerald); font-weight: 600; }
+    .winner-banner {
+      margin-top: 4px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.6);
+      font-size: 12px;
+      color: var(--emerald);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .config-block {
+      background: rgba(15,23,42,0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(55,65,81,0.9);
+      padding: 10px 12px 8px;
+      font-size: 11px;
+      color: var(--text2);
+    }
+    .config-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .config-row label {
+      font-size: 11px;
+      color: var(--text3);
+    }
+    .config-row select,
+    .config-row input {
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      color: var(--text);
+      font-size: 11px;
+      padding: 3px 8px;
+      outline: none;
+    }
+    .players-grid {
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .player-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+    }
+    .player-row span {
+      width: 54px;
+      color: var(--text3);
+    }
+    .player-row input {
+      flex: 1;
+    }
+    .player-row select {
+      width: 90px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title-block">
+        <h1>CARRERA DE CABALLOS</h1>
+        <p>Baraja Española · Versión Web</p>
+      </div>
+      <div class="controls">
+        <button id="new-game">Nueva partida</button>
+        <button id="step" disabled>Voltear carta</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="board">
+        <div class="board-header">
+          <h2>TABLERO</h2>
+          <div id="status" class="status">Sin partida. Pulsa “Nueva partida”.</div>
+        </div>
+
+        <div class="checkpoints-row" id="checkpoints">
+          <!-- Se llena por JS -->
+        </div>
+
+        <div class="lanes" id="lanes">
+          <!-- Se llena por JS -->
+        </div>
+      </section>
+
+      <section class="detail-panel">
+        <div class="config-block">
+          <div class="section-title">CONFIGURACIÓN</div>
+          <div class="config-row">
+            <label for="cfg-n-players">Jugadores:</label>
+            <select id="cfg-n-players">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+            <label for="cfg-n-horses">Caballos:</label>
+            <select id="cfg-n-horses">
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+            </select>
+          </div>
+          <div class="players-grid" id="players-grid">
+            <!-- Filas de jugadores -->
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">ÚLTIMA CARTA</div>
+          <div class="last-card-wrap">
+            <div class="last-card-frame">
+              <img id="last-card-img" alt="Última carta" src="/assets/cards/card_back.svg">
+            </div>
+            <div class="last-card-info" id="last-card-info">
+              Voltea una carta para comenzar.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">REGISTRO</div>
+          <div id="log" class="log"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const lanesEl = document.getElementById("lanes");
+    const checkpointsEl = document.getElementById("checkpoints");
+    const logEl = document.getElementById("log");
+    const newGameBtn = document.getElementById("new-game");
+    const stepBtn = document.getElementById("step");
+    const lastCardImg = document.getElementById("last-card-img");
+    const lastCardInfo = document.getElementById("last-card-info");
+    const nPlayersEl = document.getElementById("cfg-n-players");
+    const nHorsesEl = document.getElementById("cfg-n-horses");
+    const playersGridEl = document.getElementById("players-grid");
+
+    const SUITS = ["Oros", "Copas", "Espadas", "Bastos"];
+
+    function buildPlayerRows() {
+      playersGridEl.innerHTML = "";
+      const n = parseInt(nPlayersEl.value, 10);
+
+      for (let i = 0; i < 4; i++) {
+        const row = document.createElement("div");
+        row.className = "player-row";
+        row.dataset.index = String(i);
+
+        const label = document.createElement("span");
+        label.textContent = "Jugador " + (i + 1);
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.placeholder = "Nombre";
+        nameInput.id = "player-name-" + i;
+
+        const suitSelect = document.createElement("select");
+        suitSelect.id = "player-suit-" + i;
+        SUITS.forEach((s, idx) => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.textContent = s;
+          if (idx === i) opt.selected = true;
+          suitSelect.appendChild(opt);
+        });
+
+        row.appendChild(label);
+        row.appendChild(nameInput);
+        row.appendChild(suitSelect);
+
+        if (i < n) {
+          row.style.display = "flex";
+        } else {
+          row.style.display = "none";
+        }
+
+        playersGridEl.appendChild(row);
+      }
+    }
+
+    nPlayersEl.addEventListener("change", buildPlayerRows);
+    buildPlayerRows();
+
+    function appendLog(msg, cls) {
+      const line = document.createElement("div");
+      line.className = "log-line" + (cls ? " " + cls : "");
+      line.textContent = msg;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function buildLanes(data) {
+      const positions = data.positions || {};
+      const active = data.active_suits || [];
+      const trackLen = data.track_len || 7;
+      const suitToPlayer = data.suit_to_player || {};
+      lanesEl.innerHTML = "";
+      if (!active.length) {
+        lanesEl.textContent = "Sin caballos activos.";
+        return;
+      }
+      active.forEach((suit) => {
+        const pos = positions[suit] || 0;
+        const pct = Math.max(0, Math.min(100, (pos / trackLen) * 100));
+        const row = document.createElement("div");
+        row.className = "lane-row";
+
+        const label = document.createElement("div");
+        label.className = "lane-label";
+        const owner = suitToPlayer[suit];
+        label.textContent = owner ? suit + " — " + owner.name : suit;
+
+        const barWrap = document.createElement("div");
+        barWrap.className = "lane-bar-wrap";
+        const barFill = document.createElement("div");
+        barFill.className = "lane-bar-fill";
+        barFill.style.width = pct + "%";
+        barWrap.appendChild(barFill);
+
+        const posEl = document.createElement("div");
+        posEl.className = "lane-pos";
+        posEl.textContent = pos + " / " + trackLen;
+
+        row.appendChild(label);
+        row.appendChild(barWrap);
+        row.appendChild(posEl);
+        lanesEl.appendChild(row);
+      });
+    }
+
+    function buildCheckpoints(data) {
+      checkpointsEl.innerHTML = "";
+      const cps = data.checkpoints || [];
+      if (!cps.length) {
+        return;
+      }
+      cps.forEach((cp) => {
+        const slot = document.createElement("div");
+        slot.className = "cp-slot";
+        const frame = document.createElement("div");
+        frame.className = "cp-card";
+        const img = document.createElement("img");
+        if (cp.revealed && cp.card && cp.card.svg) {
+          img.src = "/assets/cards/" + cp.card.svg;
+          img.alt = cp.card.name;
+        } else {
+          img.src = "/assets/cards/card_back.svg";
+          img.alt = "Checkpoint oculto";
+        }
+        frame.appendChild(img);
+        const idx = document.createElement("div");
+        idx.className = "cp-index";
+        idx.textContent = "#" + (cp.index + 1);
+        slot.appendChild(frame);
+        slot.appendChild(idx);
+        checkpointsEl.appendChild(slot);
+      });
+    }
+
+    function renderState(data) {
+      if (!data.game && !data.positions) {
+        statusEl.textContent = "Sin partida. Pulsa “Nueva partida”.";
+        return;
+      }
+
+      buildLanes(data);
+      buildCheckpoints(data);
+
+      if (data.winner) {
+        stepBtn.disabled = true;
+        const wp = data.winner_player;
+        const label = wp ? wp.name + " (" + data.winner + ")" : data.winner;
+        statusEl.innerHTML =
+          '<span class="winner-banner">★ Ganador: ' + label + "</span>";
+      } else {
+        stepBtn.disabled = false;
+        statusEl.textContent = "Pulsa “Voltear carta” para continuar la carrera.";
+      }
+    }
+
+    async function fetchState() {
+      const res = await fetch("/api/state");
+      const data = await res.json();
+      renderState(data);
+    }
+
+    newGameBtn.onclick = async () => {
+      const nPlayers = parseInt(nPlayersEl.value, 10);
+      const nHorses = parseInt(nHorsesEl.value, 10);
+
+      const players = [];
+      const usedSuits = new Set();
+      for (let i = 0; i < nPlayers; i++) {
+        const name = document.getElementById("player-name-" + i).value.trim();
+        const suit = document.getElementById("player-suit-" + i).value;
+        if (usedSuits.has(suit)) {
+          alert("Dos jugadores no pueden elegir el mismo caballo.");
+          return;
+        }
+        usedSuits.add(suit);
+        players.push({ name, suit });
+      }
+
+      if (nHorses === 3 && nPlayers > 3) {
+        alert("Con 3 caballos puede haber máximo 3 jugadores.");
+        return;
+      }
+
+      const res = await fetch("/api/new-game", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          n_players: nPlayers,
+          n_horses: nHorses,
+          players,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      logEl.innerHTML = "";
+      appendLog(
+        "Nueva partida iniciada. Caballos activos: " +
+          (data.active_suits || []).join(", ")
+      );
+      lastCardImg.src = "/assets/cards/card_back.svg";
+      lastCardInfo.textContent = "La carrera ha comenzado. Voltea una carta.";
+      renderState(data);
+    };
+
+    stepBtn.onclick = async () => {
+      const res = await fetch("/api/step", { method: "POST" });
+      const data = await res.json();
+      if (data.error) {
+        appendLog("Error: " + data.error);
+        return;
+      }
+      const s = data.last_step;
+      if (s) {
+        if (s.drawn && s.drawn.svg) {
+          lastCardImg.src = "/assets/cards/" + s.drawn.svg;
+        }
+        if (s.drawn) {
+          lastCardInfo.textContent = s.drawn.name;
+        }
+        if (s.advanced_suit) {
+          const owner = s.advanced_player;
+          const ownerPart = owner ? " (" + owner.name + ")" : "";
+          appendLog(
+            "Carta: " + s.drawn.name + " → avanza " + s.advanced_suit + ownerPart
+          );
+        } else {
+          appendLog("Carta: " + s.drawn.name + " (palo inactivo)");
+        }
+        if (
+          s.revealed_checkpoint_index !== null &&
+          s.revealed_card
+        ) {
+          appendLog(
+            "Checkpoint #" +
+              (s.revealed_checkpoint_index + 1) +
+              " revelado: " +
+              s.revealed_card.name,
+            "cp"
+          );
+          if (s.penalty_suit) {
+            const pobj = s.penalty_player;
+            const ownerPart = pobj ? " (" + pobj.name + ")" : "";
+            appendLog(
+              "Penalidad: " +
+                s.penalty_suit +
+                ownerPart +
+                " retrocede 1 casilla",
+              "penalty"
+            );
+          }
+        }
+        if (s.winner) {
+          const wp = s.winner_player;
+          const label = wp ? wp.name + " (" + s.winner + ")" : s.winner;
+          appendLog("GANADOR: " + label, "winner");
+        }
+      }
+      renderState(data);
+    };
+
+    // Estado inicial
+    fetchState();
+  </script>
+</body>
+</html>
+
